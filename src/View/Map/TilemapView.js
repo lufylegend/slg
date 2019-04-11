@@ -1,7 +1,8 @@
 /**
-地形，数字
+地形，[地形ID,地表ID,地表ID...]
 是否打开，{势力ID:1}
-建筑，{id:建筑ID}
+建筑，{id:建筑ID,seigniorId:0,cityId:0,type:建筑种类}
+资源，{population:[人口],土地肥沃:10,铁矿:10}
 */
 var TilemapView = (function() {
   function TilemapView() {
@@ -66,9 +67,7 @@ var TilemapView = (function() {
           var v = _this._surface[ids[i]] ? 0 : 1;
           _this._surface[ids[i]] = 1;
           tile = new LBitmapData(dataList[master.icon(v)]);
-          point.x += master.x();
-          point.y += master.y();
-          _this.bitmap.bitmapData.copyPixels(tile, rect, point);
+          _this.bitmap.bitmapData.copyPixels(tile, rect, new LPoint(point.x + master.x(), point.y + master.y()));
         }
       }
       if (data[2].id) {
