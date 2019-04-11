@@ -20,11 +20,17 @@ var MapInputView = (function() {
   
   MapInputView.prototype.areaDragStart = function(event) {
     var _this = this;
+    if(GameManager.currentSeigniorId() !== GameManager.seigniorId()){
+    	return;
+    }
     _this._savePosition = new LPoint(_this.x, _this.y);
     event.currentTarget.startDrag(event.touchPointID);
   };
   MapInputView.prototype.areaDragStop = function(event) {
     var _this = this;
+    if(GameManager.currentSeigniorId() !== GameManager.seigniorId()){
+    	return;
+    }
     event.currentTarget.stopDrag();
     if (Math.abs(this._savePosition.x - _this.x) > 5 || 
       Math.abs(this._savePosition.y - _this.y) > 5) {

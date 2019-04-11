@@ -2,13 +2,23 @@ var MapView = (function() {
   function MapView() {
     var _this = this;
     var properties = {
+      root: {
+        type: 'LSprite'
+      },
+      mapGroup: {
+        parent: 'root',
+        type: 'LSprite'
+      },
       mapInput: {
+        parent: 'mapGroup',
         type: 'MapInputView'
       },
       tilemap: {
+        parent: 'mapGroup',
         type: 'TilemapView',
       },
       characterLayer: {
+        parent: 'mapGroup',
         type: 'CharacterMapView'
       },
       ctrlmenu: {
@@ -34,6 +44,9 @@ var MapView = (function() {
     CommonEvent.addEventListener(CommonEvent.CITY_OUT, _this._cityOutHandler, _this);
     CommonEvent.addEventListener(CommonEvent.BUILD_CHILD_CLICK, _this._createBuildHandler, _this);
     CommonEvent.addEventListener(CommonEvent.BUILD_TEAR_DOWN, _this._buildTearDownHandler, _this);
+
+    CommonEvent.addEventListener(CommonEvent.MAP_ZOOM, _this._onZoomHandler, _this);
+    CommonEvent.addEventListener(CommonEvent.MAP_SHAKE, _this._onShakeHandler, _this);
     
     _this.tilemap.followTarget = _this.mapInput;
     _this.characterLayer.followTarget = _this.mapInput;
@@ -41,6 +54,40 @@ var MapView = (function() {
     GameManager.seigniorId(1);
     SeigniorManager.init();
     GameManager.currentSeigniorId(1);
+  };
+  MapView.prototype._onZoomHandler = function(event) {
+    var _this = this;
+    var x = event.x;
+    var y = event.y;
+    var scale = event.scale;
+    GameManager.addRunningObjects(_this.root);
+    _this.root.x = x + _this.mapInput.x;
+    _this.root.y = y + _this.mapInput.y;
+    _this.mapGroup.x = -_this.root.x;
+    _this.mapGroup.y = -_this.root.y;
+    LTweenLite.to(_this.root, 0.3, { scaleX: scale, scaleY: scale, onComplete: function() {
+      GameManager.removeRunningObjects(_this.root);
+    } });
+  };
+  MapView.prototype._onShakeHandler = function(event) {
+    var _this = this;
+    var x = event.x;
+    var y = event.y;
+    GameManager.addRunningObjects(_this);
+    LTweenLite.to(_this, 0.05, { x: -10, y: -10 })
+      .to(_this, 0.05, { x: 10, y: 10 })
+      .to(_this, 0.05, { x: -10, y: 10 })
+      .to(_this, 0.05, { x: 10, y: -10 })
+      .to(_this, 0.05, { x: 0, y: 0, onComplete: function() {
+
+        var e = new LEvent(CommonEvent.MAP_ZOOM);
+        e.x = x;
+        e.y = y;
+        e.scale = 1;
+        CommonEvent.dispatchEvent(e);
+
+        GameManager.removeRunningObjects(_this);
+      } });
   };
   MapView.prototype._cityOutHandler = function() {
     var _this = this;
@@ -122,35 +169,51 @@ var MapView = (function() {
     var toX = event.x;
     var toY = event.y;
     if (_this.chara) {
-      if (_this.tilemap.inMoveRange(toX, toY)) {
-        _this.characterMove(toX, toY);
-      } else {
-        
-        _this.tilemap.clearMoveRange();
-        if (_this.chara.moveOver) {
-          _this.chara.setActionOver(true);
-        }
-        _this.chara = null;
-        
-        var onCity = _this.clickCity(toX, toY);
-        if (onCity) {
-          return;
-        }
-        _this.ctrlmenu.hide();
-      }
+      _this.onClickWhenCharacterSelect(toX, toY);
       return;
     }
     _this.chara = _this.characterLayer.getCharacter(toX, toY);
-    
-    if (_this.chara) {
-      if (_this.chara.model.actionOver()) {
-        _this.chara = null;
-      } else {
-        _this.onClickCharacter();
-      }
+    if (!_this.chara) {
+      _this.clickCity(toX, toY);
       return;
     }
-    _this.clickCity(toX, toY);
+    if (_this.chara.model.actionOver()) {
+      _this.chara = null;
+    } else {
+      _this.onClickCharacter();
+    }
+  };
+  MapView.prototype.onClickWhenCharacterSelect = function(toX, toY) {
+    var _this = this;
+    if (_this.clickAttackMark(toX, toY)) {
+      return;
+    }
+    if (_this.tilemap.inMoveRange(toX, toY)) {
+      _this.characterMove(toX, toY);
+      return;
+    }
+    _this.tilemap.clearMoveRange();
+    if (_this.chara.moveOver) {
+      _this.chara.setActionOver(true);
+    }
+    _this.chara = null;
+    if (_this.clickCity(toX, toY)) {
+      return;
+    }
+    _this.ctrlmenu.hide();  
+  };
+  MapView.prototype.clickAttackMark = function(toX, toY) {
+    var _this = this;
+    var target = _this.characterLayer.getCharacter(toX, toY);
+    if (!target || !target.attackMarkEnabled()) {
+      return false;
+    }
+    _this.tilemap.clearMoveRange();
+    _this.ctrlmenu.hide();
+    //ActionManager.currentCharacter = _this.chara;
+    ActionManager.attackStart(_this.chara, target);
+    
+    return true;
   };
   
   MapView.prototype.clickCity = function(toX, toY) {
@@ -163,6 +226,7 @@ var MapView = (function() {
       return true;
     }
     if (data.type === 'building') {
+      
       return false;
     }
     if (data.type === 'city') {
@@ -214,6 +278,7 @@ var MapView = (function() {
     _this.characterLayer.characterMove(_this.chara, path)
       .then(function() {
         _this.ctrlmenu.showCharacter(_this.chara);
+        _this.tilemap.showAttackRange(_this.chara);
       });
   };
   

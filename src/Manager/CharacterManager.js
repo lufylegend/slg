@@ -3,7 +3,17 @@ var CharacterManager = (function() {
     var _this = this;
     LExtends(_this, BaseMasterManager, [CharacterMasterModel]);
     _this.hashMap = {};
+    _this._attackMarkCharacters = [];
   }
+  CharacterManager.prototype.pushAttackMarkCharacter = function(chara) {
+    this._attackMarkCharacters.push(chara);
+  };
+  CharacterManager.prototype.clearAttackMarkCharacter = function() {
+    this._attackMarkCharacters.forEach(function(chara) {
+      chara.attackMarkEnabled(false);
+    });
+    this._attackMarkCharacters.length = 0;
+  };
   CharacterManager.prototype.getAnimationData = function() {
     // 1792 x 64
     var list = LGlobal.divideCoordinate(1792, 64, 1, 28);
@@ -91,6 +101,20 @@ var CharacterManager = (function() {
     check_directions[CharacterDirection.LEFT] = CharacterDirection.RIGHT;
     check_directions[CharacterDirection.RIGHT] = CharacterDirection.LEFT;
     return check_directions;
+  };
+  CharacterManager.prototype.getDirectionFromTarget = function(chara, target) {
+    var direction;
+    var angle = Math.atan2(target.y - chara.y, target.x - chara.x) * 180 / Math.PI + 180;
+    if (angle <= 45 || angle >= 315) {
+      direction = CharacterDirection.LEFT;
+    } else if (angle > 45 && angle < 135) {
+      direction = CharacterDirection.UP;
+    } else if (angle >= 135 && angle <= 225) {
+      direction = CharacterDirection.RIGHT;
+    } else {
+      direction = CharacterDirection.DOWN;
+    }
+    return direction;
   };
   return new CharacterManager();
 })();

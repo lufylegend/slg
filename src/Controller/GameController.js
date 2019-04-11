@@ -32,12 +32,13 @@ var GameController = (function() {
   }
   GameController.prototype.onLoad = function(request) {
     var _this = this;
+    CommonEvent.addEventListener(CommonEvent.TAN_END, _this._nextRun, _this);
     _this.year = 184;
     _this.month = 1;
     _this.monthStep = 0;
     _this._timeUpdate();
   };
-  GameController.prototype._nextRun = function() {
+  GameController.prototype._nextRun = function(event) {
     var _this = this;
     var index = SeigniorManager.masterArray.findIndex(function(seignior) {
       return seignior.id() === GameManager.currentSeigniorId();
@@ -49,8 +50,18 @@ var GameController = (function() {
       });
     });
     CommonEvent.dispatchEvent(CommonEvent.NEXT_TAN);
-    //TODO::AI行动
-    _this._timePlus();
+    index++;
+    if(index > SeigniorManager.masterArray.length - 1){
+    	index = 0;
+    }
+    var seigniorModel = SeigniorManager.masterArray[index];
+    GameManager.currentSeigniorId(seigniorModel.id());
+    if(seigniorModel.id() === GameManager.seigniorId()){
+    	_this._timePlus();
+    }else {
+    	AIManager.start();
+    }
+    
   };
   GameController.prototype._timeUpdate = function() {
     var _this = this;

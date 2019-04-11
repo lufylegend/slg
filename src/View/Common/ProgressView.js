@@ -39,6 +39,21 @@ var ProgressView = (function() {
       _this.updateView(params);
     }
   }
+  ProgressView.prototype.animeTo = function(progress) {
+    var _this = this;
+    GameManager.addRunningObjects(_this);
+    LTweenLite.to(_this, 0.3, { progress: progress
+    	,onUpdate: function(event) {
+      	_this.label.text = _this.progress + '/' + _this.sum;
+      	var bitmapData = _this.foreground.bitmapData;
+		    var width = bitmapData.image.width * _this.progress / _this.sum;
+		    bitmapData.setProperties(0, 0, width, bitmapData.getHeight());
+    	}
+    	,onComplete: function(event) {
+      	GameManager.removeRunningObjects(_this);
+    	} 
+    });
+  };
   ProgressView.prototype.updateView = function(params) {
     var _this = this;
     if (params.foreground) {

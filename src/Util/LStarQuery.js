@@ -170,7 +170,6 @@ LStarQuery.prototype = {
       for (var i = 0; i < startIndex; i++) {
         //周围的每一个节点
         var checkPoint = checkList[i];
-        console.log(checkPoint.x, checkPoint.y, self.isWay(checkPoint, thisPoint));
         if (self.isWay(checkPoint, thisPoint)) {
           //如果坐标可以通过，则首先检查是不是目标点
           if (checkPoint === self._endPoint) {

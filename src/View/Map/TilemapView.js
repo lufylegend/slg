@@ -37,6 +37,7 @@ var TilemapView = (function() {
     var fromY = y / 80 >> 0;
     _this.bitmap.x = -x % 80;
     _this.bitmap.y = -y % 80;
+    _this._surface = {};
     for (var i = fromY; i < fromY + _this.rows + 1; i++) {
       for (var j = fromX; j < fromX + _this.cols + 1; j++) {  
         var data = GameManager.data[i][j];
@@ -58,8 +59,15 @@ var TilemapView = (function() {
       _this.bitmap.bitmapData.copyPixels(tile, rect, point);
       if (ids.length > 1) {
         for (var i = 1; i < ids.length; i++) {
-          var key = ids[i] === 1 ? 'tree' : 'stone';
-          tile = new LBitmapData(dataList[key]);
+          var master = SurfaceManager.getMasterModel(ids[i]);
+          if(!master.visible()){
+            continue;
+          }
+          var v = _this._surface[ids[i]] ? 0 : 1;
+          _this._surface[ids[i]] = 1;
+          tile = new LBitmapData(dataList[master.icon(v)]);
+          point.x += master.x();
+          point.y += master.y();
           _this.bitmap.bitmapData.copyPixels(tile, rect, point);
         }
       }
@@ -108,6 +116,7 @@ var TilemapView = (function() {
   TilemapView.prototype.clearMoveRange = function() {
     var _this = this;
     _this.moveRange = {};
+    CharacterManager.clearAttackMarkCharacter();
   };
   TilemapView.prototype.inMoveRange = function(x, y) {
     var _this = this;
@@ -127,6 +136,25 @@ var TilemapView = (function() {
         }
         _this.moveRange[j + '_' + i] = 1;
       }
+    }
+    _this.showAttackRange(character);
+  };
+  TilemapView.prototype.showAttackRange = function(character) {
+    var _this = this;
+    
+    var x = character.x / 80 >> 0;
+    var y = character.y / 80 >> 0;
+    var ranges = [[-1, 0], [0, -1], [1, 0], [0, 1]];
+    for (var i = 0; i < ranges.length; i++) {
+      var range = ranges[i];
+      var child = CharacterManager.hashMap[x + range[0] + '_' + (y + range[1])];
+      if (!child) {
+        continue;
+      }
+      if (child.model.seigniorId() === character.model.seigniorId()) {
+        continue;
+      }
+      child.attackMarkEnabled(true);
     }
   };
   

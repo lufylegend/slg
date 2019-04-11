@@ -113,6 +113,26 @@ var Common = (function() {
     }
     controller.changeScene(request || {});
   };
+  Common.delay = function(time) {
+    return new Promise(function(resolve, reject) {
+      setTimeout(function() {
+        resolve();
+      }, time);
+    });
+  };
+  Common.wait = function(callback) {
+    var _this = this;
+    var complete = callback();
+    //trace("complete="+complete);
+    if (complete) {
+      return Promise.resolve();
+    } else {
+      return Common.delay(100)
+        .then(function() {
+          return Common.wait(callback);
+        });
+    }
+  };
   /*
   Common.getPanel = function(request) {
     var bitmapData = new LBitmapData(dataList[request.image ? request.image : 'frame01']);

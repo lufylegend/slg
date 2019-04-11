@@ -6,6 +6,15 @@ var BattleCharacterView = (function() {
       layer: {
         type: 'LSprite'
       },
+      hpProgress: {
+        type: 'ProgressView',
+        params: { progress: 200, sum: 200, background: 'hp_background', foreground: 'hp_bar', labelVisible:false },
+        properties: {
+          x: 10,
+          y: 60,
+          //rotate:-90
+        }
+      },
       bufferLayer: {
         type: 'LSprite'
       },
@@ -14,6 +23,15 @@ var BattleCharacterView = (function() {
         data: 'action_over',
         properties: {
           visible: false
+        }
+      },
+      attackMark: {
+        type: 'LBitmap',
+        data: 'attack_mark',
+        properties: {
+          visible: false,
+          x: 13,
+          y: 30
         }
       }
     };
@@ -66,8 +84,30 @@ var BattleCharacterView = (function() {
     var _this = this;
     switch (_this.action) {
       case CharacterAction.ATTACK:
+        if (_this.angry) {
+          var e = new LEvent(CommonEvent.MAP_SHAKE);
+          e.x = _this.x;
+          e.y = _this.y;
+          CommonEvent.dispatchEvent(e);
+        }
+        if (_this.target) {
+          _this.target.setActionDirection(CharacterAction.HERT, _this.target.direction);
+          _this.target.hpProgress.animeTo(_this.target.hpProgress.progress - 50);
+        }
         _this.setActionDirection(CharacterAction.MOVE, _this.direction);
+        GameManager.removeRunningObjects(_this);
         break;
+      case CharacterAction.HERT:
+        _this.setActionDirection(CharacterAction.MOVE, _this.direction);
+        GameManager.removeRunningObjects(_this);
+        break;
+      case CharacterAction.BlOCK:
+        _this.setActionDirection(CharacterAction.MOVE, _this.direction);
+        GameManager.removeRunningObjects(_this);
+        break;
+      //case CharacterAction.MOVE:
+      //case CharacterAction.STAND:
+      //  break;
     }
   };
   BattleCharacterView.prototype.setActionDirection = function(action, direction) {
@@ -80,6 +120,39 @@ var BattleCharacterView = (function() {
         
     _this.action = action;
     _this.direction = direction;
+    if (action !== CharacterAction.STAND && action !== CharacterAction.MOVE) {
+      GameManager.addRunningObjects(_this);
+    }
+  };
+  BattleCharacterView.prototype.attackMarkEnabled = function(value) {
+    var _this = this;
+    if (typeof value === UNDEFINED) {
+      return _this.attackMark.visible;
+    }
+    _this.attackMark.visible = value;
+    if (value) {
+      CharacterManager.pushAttackMarkCharacter(this);
+    }
+  };
+  BattleCharacterView.prototype.attackAngryExec = function() {
+    var _this = this;
+    var filterObj = { filterValue: 1 };
+    var shadow = new LDropShadowFilter(0, 0, '#FF0000', filterObj.filterValue);
+    _this.filters = [shadow];
+    var func = function(event) {
+      var obj = event.target;
+      _this.filters[0].shadowBlur = obj.filterValue;
+    };
+    return new Promise(function(resolve, reject) {
+      LTweenLite.to(filterObj, 0.2, { filterValue: 20, onUpdate: func })
+        .to(filterObj, 0.2, { filterValue: 1, onUpdate: func })
+        .to(filterObj, 0.2, { filterValue: 20, onUpdate: func })
+        .to(filterObj, 0.2, { filterValue: 1, onUpdate: func
+          , onComplete: function() {
+            _this.filters = null;
+            resolve();
+          } });
+    });
   };
   
   return BattleCharacterView;

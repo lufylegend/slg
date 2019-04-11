@@ -6,12 +6,31 @@ var dialogLayer;
 
 window.setting = window.setting || {};
 var loadFristData = [
+  { type: 'js', path: 'src/Manager/BaseMasterManager.js' },
+  { type: 'js', path: 'src/Model/BaseModel.js' },
+  { type: 'js', path: 'src/Model/CityModel.js' },
+  { type: 'js', path: 'src/Model/CharacterModel.js' },
+  { type: 'js', path: 'src/Model/CtrlMenuModel.js' },
+  { type: 'js', path: 'src/Model/Master/CityMasterModel.js' },
+  { type: 'js', path: 'src/Model/Master/SeigniorMasterModel.js' },
+  { type: 'js', path: 'src/Model/Master/CharacterMasterModel.js' },
+  { type: 'js', path: 'src/Model/Master/BuildingMasterModel.js' },
+  { type: 'js', path: 'src/Model/Master/SurfaceMasterModel.js' },
+];
+var loadData = [
+
   { name: 'tile_0', path: 'resources/images/map/tile_0.png' },
   { name: 'tile_1', path: 'resources/images/map/tile_1.png' },
   { name: 'tile_2', path: 'resources/images/map/tile_2.png' },
   { name: 'tile_3', path: 'resources/images/map/tile_3.png' },
+  { name: 'tile_4', path: 'resources/images/map/tile_4.png' },
   { name: 'tree', path: 'resources/images/map/tree.png' },
   { name: 'stone', path: 'resources/images/map/stone.png' },
+  { name: 'fish_0', path: 'resources/images/map/fish_0.png' },
+  { name: 'fish_1', path: 'resources/images/map/fish_1.png' },
+  { name: 'horse_0', path: 'resources/images/map/horse_0.png' },
+  { name: 'horse_1', path: 'resources/images/map/horse_1.png' },
+  { name: 'horse_2', path: 'resources/images/map/horse_2.png' },
   { name: 'city', path: 'resources/images/map/city.png' },
   { name: 'farmland', path: 'resources/images/map/farmland.png' },
   { name: 'institute', path: 'resources/images/map/institute.png' },
@@ -26,11 +45,15 @@ var loadFristData = [
   { name: 'btn03', path: 'resources/images/ui/btn03.png' },
   { name: 'btn06', path: 'resources/images/ui/btn06.png' },
   { name: 'action_over', path: 'resources/images/ui/action_over.png' },
+  { name: 'attack_mark', path: 'resources/images/ui/attack_mark.png' },
+  { name: 'hp_bar', path: 'resources/images/ui/hp_bar.png' },
+  { name: 'hp_background', path: 'resources/images/ui/hp_background.png' },
   { type: 'js', path: 'resources/configs/citySettingConfig.js' },
   { type: 'js', path: 'resources/configs/mapSettingConfig.js' },
   { type: 'js', path: 'resources/configs/buildingSettingConfig.js' },
   { type: 'js', path: 'resources/configs/characterSettingConfig.js' },
   { type: 'js', path: 'resources/configs/seigniorSettingConfig.js' },
+  { type: 'js', path: 'resources/configs/surfaceSettingConfig.js' },
   { type: 'js', path: 'src/Core/AutoDisplayObject.js' },
   { type: 'js', path: 'src/Util/LStarQuery.js' },
   { type: 'js', path: 'src/Util/CommonEvent.js' },
@@ -45,16 +68,9 @@ var loadFristData = [
   { type: 'js', path: 'src/Controller/Dialog/CharacterMapDialogController.js' },
   { type: 'js', path: 'src/Controller/Dialog/CharacterListDialogController.js' },
   
-  { type: 'js', path: 'src/Model/BaseModel.js' },
-  { type: 'js', path: 'src/Model/CityModel.js' },
-  { type: 'js', path: 'src/Model/CharacterModel.js' },
-  { type: 'js', path: 'src/Model/CtrlMenuModel.js' },
-  { type: 'js', path: 'src/Model/Master/CityMasterModel.js' },
-  { type: 'js', path: 'src/Model/Master/SeigniorMasterModel.js' },
-  { type: 'js', path: 'src/Model/Master/CharacterMasterModel.js' },
-  { type: 'js', path: 'src/Model/Master/BuildingMasterModel.js' },
   
   { type: 'js', path: 'src/View/Common/BaseView.js' },
+  { type: 'js', path: 'src/View/Common/ProgressView.js' },
   { type: 'js', path: 'src/View/Map/CitySimpleView.js' },
   { type: 'js', path: 'src/View/Map/TilemapView.js' },
   { type: 'js', path: 'src/View/Map/MapInputView.js' },
@@ -66,17 +82,14 @@ var loadFristData = [
   { type: 'js', path: 'src/View/Character/CharacterListChildView.js' },
   { type: 'js', path: 'src/View/Build/BuildChildView.js' },
   
-  { type: 'js', path: 'src/Manager/BaseMasterManager.js' },
+  { type: 'js', path: 'src/Manager/SurfaceManager.js' },
   { type: 'js', path: 'src/Manager/BuildingManager.js' },
   { type: 'js', path: 'src/Manager/CharacterManager.js' },
   { type: 'js', path: 'src/Manager/SeigniorManager.js' },
   { type: 'js', path: 'src/Manager/CityManager.js' },
   { type: 'js', path: 'src/Manager/GameManager.js' },
-
-];
-var loadData = [
-
-  //{ type: 'sound', name: 'se_click', path: 'resources/sound/se_click.wav' }
+  { type: 'js', path: 'src/Manager/ActionManager.js' },
+  { type: 'js', path: 'src/Manager/AIManager.js' },
 ];
 var delayLoadContainer = {};
 
@@ -95,6 +108,11 @@ function main() {
   }, dataFristLoadComplete);
 }
 function dataFristLoadComplete(data) {
+  LLoadManage.load(loadData, function(progress) {
+  
+  }, dataLoadComplete);
+}
+function dataLoadComplete(data) {
   dataList = data;
   loadingLayer.remove();
   rootLayer = new LSprite();
@@ -102,6 +120,7 @@ function dataFristLoadComplete(data) {
   dialogLayer = new LSprite();
   addChild(dialogLayer);
   BuildingManager.setMasters(buildingSettingConfig.buildings);
+  SurfaceManager.setMasters(surfaceSettingConfig.surfaces);
   CharacterManager.setMasters(characterSettingConfig.characters);
   SeigniorManager.setMasters(seigniorSettingConfig.seigniors);
   CityManager.setMasters(citySettingConfig.citys);
